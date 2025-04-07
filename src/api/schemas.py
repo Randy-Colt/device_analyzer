@@ -1,9 +1,6 @@
 from datetime import datetime
-from typing import Type, Sequence
 
-from pydantic import BaseModel, PositiveInt
-
-from core.settings import Base
+from pydantic import BaseModel, NonNegativeInt, PositiveInt
 
 
 class BaseDevice(BaseModel):
@@ -33,29 +30,27 @@ class DeviceDataResponse(BaseDeviceData):
     timestamp: datetime
 
 
-class Stats(BaseModel):
-    min: float
-    max: float
-    count: int
-    sum: float
-    median: float
-
-
 class DeviceDataStats(BaseModel):
-    x: Stats
-    y: Stats
-    z: Stats
+    device_id: PositiveInt
+    x_min: float
+    y_min: float
+    z_min: float
+    x_max: float
+    y_max: float
+    z_max: float
+    # x_median: float
+    # y_median: float
+    # z_median: float
+    total_count: NonNegativeInt
 
 
-def convert_model(
-    schema: Type[BaseModel],
-    model_objects: Base | Sequence[Base],
-    many: bool = False
-) -> BaseModel | list[BaseModel]:
-    '''Конвертирует модель алхимии в модель пайдентик.'''
-    if many:
-        return [
-            schema.model_validate(model_object, from_attributes=True)
-            for model_object in model_objects
-        ]
-    return schema.model_validate(model_objects, from_attributes=True)
+class BaseDeviceOwner(BaseModel):
+    pass
+
+
+class DeviceOwnerCreate(BaseDeviceOwner):
+    pass
+
+
+class DeviceOwnerResponse(BaseDeviceOwner):
+    id: PositiveInt

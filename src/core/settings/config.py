@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     @property
     def db_url(self) -> str:
         if self.sqlite:
-            return 'sqlite+aiosqlite:///../db.sqlite3'
+            return 'sqlite+aiosqlite:///./db.sqlite3'
         return (
             f'postgresql+asyncpg://{self.postgres_user}:'
             f'{self.postgres_password}@{self.db_host}:{self.db_port}'

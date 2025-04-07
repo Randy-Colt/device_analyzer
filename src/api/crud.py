@@ -9,7 +9,7 @@ from core.models import Device, DeviceData, DeviceOwner
 
 async def create_device(
     session: AsyncSession,
-    data: DeviceCreate
+    data: DeviceCreate | None = None
 ) -> Device:
     if data is not None:
         device = Device(**data.model_dump())
@@ -47,6 +47,15 @@ async def check_device_exists(
 ) -> bool:
     return await session.scalar(
         exists().where(Device.id == device_id).select()
+    )
+
+
+async def check_owner_exists(
+    session: AsyncSession,
+    owner_id: int
+) -> bool:
+    return await session.scalar(
+        exists().where(DeviceOwner.id == owner_id).select()
     )
 
 

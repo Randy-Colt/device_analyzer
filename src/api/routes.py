@@ -8,8 +8,9 @@ from api.schemas import (
     DeviceCreate,
     DeviceDataCreate,
     DeviceDataResponse,
-    DeviceResponse,
-    convert_model
+    DeviceDataStats,
+    DeviceOwnerResponse,
+    DeviceResponse
 )
 from core.settings import helper
 from api import crud
@@ -22,13 +23,20 @@ async def create_device(
     session: Annotated[AsyncSession, Depends(helper.get_session)],
     data: DeviceCreate | None = None
 ) -> DeviceResponse:
+    if data is not None:
+        owner_exists = await crud.check_owner_exists(session, data.owner_id)
+        if not owner_exists:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                {'detail': 'Пользователя с таким id не найдено.'}
+            )
     return await crud.create_device(session, data)
 
 
 @router.post('/owners', status_code=status.HTTP_201_CREATED)
 async def create_device_owner(
     session: Annotated[AsyncSession, Depends(helper.get_session)]
-):
+) -> DeviceOwnerResponse:
     return await crud.create_device_owner(session)
 
 
@@ -38,7 +46,7 @@ async def get_stats_for_device_owner(
     session: Annotated[AsyncSession, Depends(helper.get_session)],
     from_date: datetime | None = None,
     to_date: datetime | None = None
-):
+) -> list[DeviceDataStats]:
     return await crud.get_stats_owner_device(
         session, owner_id, from_date, to_date
     )
@@ -50,8 +58,7 @@ async def create_device_data(
     data: DeviceDataCreate,
     session: Annotated[AsyncSession, Depends(helper.get_session)]
 ) -> DeviceDataResponse:
-    dev_data_model = await crud.create_data(session, data, device_id)
-    return convert_model(DeviceDataResponse, dev_data_model)
+    return await crud.create_data(session, data, device_id)
 
 
 @router.get('/{device_id}/stats')
@@ -60,7 +67,7 @@ async def get_stats(
     session: Annotated[AsyncSession, Depends(helper.get_session)],
     from_date: datetime | None = None,
     to_date: datetime | None = None
-):
+) -> DeviceDataStats:
     device_exists = await crud.check_device_exists(session, device_id)
     if not device_exists:
         raise HTTPException(
