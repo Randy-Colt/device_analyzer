@@ -38,9 +38,9 @@ class DeviceDataStats(BaseModel):
     x_max: float
     y_max: float
     z_max: float
-    # x_median: float
-    # y_median: float
-    # z_median: float
+    x_median: float
+    y_median: float
+    z_median: float
     total_count: NonNegativeInt
 
 
