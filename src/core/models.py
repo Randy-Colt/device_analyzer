@@ -10,18 +10,27 @@ class Device(Base):
 
     __tablename__ = 'devices'
 
-    owner_id: Mapped[int | None] = mapped_column(ForeignKey('device_owners.id'))
-    characteristics: Mapped[list['DeviceData']] = relationship(
-        back_populates='device', lazy='joined'
+    owner_id: Mapped[int | None] = mapped_column(
+        ForeignKey('device_owners.id')
     )
-    owner: Mapped['DeviceOwner'] = relationship(back_populates='device', lazy='joined')
+    characteristics: Mapped[list['DeviceData']] = relationship(
+        back_populates='device',
+        lazy='joined'
+    )
+    owner: Mapped['DeviceOwner'] = relationship(
+        back_populates='device',
+        lazy='joined'
+    )
 
 
 class DeviceData(Base):
 
     __tablename__ = 'device_data'
 
-    device: Mapped[Device] = relationship(back_populates='characteristics', lazy='joined')
+    device: Mapped[Device] = relationship(
+        back_populates='characteristics',
+        lazy='joined'
+    )
     device_id: Mapped[int] = mapped_column(ForeignKey('devices.id'))
     x: Mapped[float]
     y: Mapped[float]
@@ -36,4 +45,7 @@ class DeviceOwner(Base):
 
     __tablename__ = 'device_owners'
 
-    device: Mapped[list[Device]] = relationship(back_populates='owner', lazy='joined')
+    device: Mapped[list[Device]] = relationship(
+        back_populates='owner',
+        lazy='joined'
+    )

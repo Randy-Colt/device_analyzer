@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import case, exists, func, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 
@@ -45,7 +45,9 @@ async def check_device_exists(
     session: AsyncSession,
     device_id: int
 ) -> bool:
-    return await session.scalar(exists().where(Device.id == device_id).select())
+    return await session.scalar(
+        exists().where(Device.id == device_id).select()
+    )
 
 
 def get_query_stats(
@@ -59,12 +61,15 @@ def get_query_stats(
         func.max(DeviceData.x).label('x_max'),
         func.max(DeviceData.y).label('y_max'),
         func.max(DeviceData.z).label('z_max'),
+        func.percentile_cont(0.5).within_group(DeviceData.x).label('x_median'),
+        func.percentile_cont(0.5).within_group(DeviceData.y).label('y_median'),
+        func.percentile_cont(0.5).within_group(DeviceData.z).label('z_median'),
         func.count(func.distinct(DeviceData.id)).label('total_count')
-        # func.percentile_cont(0.5).within_group(DeviceData.x).label('x_median'),
-        # func.percentile_cont(0.5).within_group(DeviceData.y).label('y_median'),
-        # func.percentile_cont(0.5).within_group(DeviceData.z).label('z_median')
     )
-    query = select(DeviceData.device_id, *aggregations)
+    query = (
+        select(DeviceData.device_id, *aggregations)
+        .group_by(DeviceData.device_id)
+    )
     if from_date is not None:
         query = query.where(DeviceData.timestamp >= from_date)
     if to_date is not None:
@@ -93,7 +98,6 @@ async def get_stats_owner_device(
     query = get_query_stats(from_date, to_date)
     query = (
         query.where(Device.owner_id == owner_id)
-        .group_by(DeviceData.device_id)
         .join(Device, DeviceData.device_id == Device.id)
     )
     result = await session.execute(query)
